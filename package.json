@@ -1,0 +1,31 @@
+{
+  "name": "umkm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "4"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@colors/colors": "^1.6.0",
+    "@faker-js/faker": "^9.7.0",
+    "2captcha": "^3.0.5-2",
+    "chalk": "^5.4.1",
+    "cheerio": "^1.0.0",
+    "dotenv": "^17.2.1",
+    "https-proxy-agent": "^7.0.6",
+    "inquirer": "^12.9.2",
+    "node-fetch": "^3.3.2",
+    "node-random-name": "^1.0.1",
+    "readline-sync": "^1.4.10",
+    "tmail-api": "^1.0.2",
+    "undici": "^7.13.0"
+  }
+}
