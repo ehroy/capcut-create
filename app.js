@@ -137,7 +137,7 @@ const CONFIG = {
     LOG_FILE: "./accounts/registration_log.txt",
   },
   ENDPOINTS: {
-    BASE_URL: "https://pippit.capcut.com",
+    BASE_URL: "https://www.capcut.com",
     SEND_CODE: "/passport/web/email/send_code/",
     VERIFY_CODE: "/passport/web/email/register/code_verify/",
     VERIFY_LOGIN: "/passport/web/email/register_verify_login/",
@@ -208,9 +208,7 @@ class FileManager {
   static async saveSuccessfulAccount(email, password, trialInfo = null) {
     await this.ensureDirectoryExists();
     const timestamp = new Date().toISOString();
-    const accountData = `${timestamp} | ${email}:${password} | Status: SUCCESS${
-      trialInfo ? ` | Trial: ${JSON.stringify(trialInfo)}` : ""
-    }\n`;
+    const accountData = `${email}:${password} \n`;
 
     await fs.appendFile(CONFIG.FILES.SUCCESS_FILE, accountData);
     log(`Account saved: ${email}`, "save");
@@ -527,10 +525,7 @@ class CapCutTrialManager {
     };
 
     const url =
-      CONFIG.ENDPOINTS.BASE_URL +
-      CONFIG.ENDPOINTS.SEND_CODE +
-      "?aid=573081&account_sdk_source=web&passport_jssdk_version=1.0.7-beta.2&language=en&verifyFp=verify_m9vlaygx_BMtaVjBT_Ea3T_40gt_9aP1_xNdYVFHgpZrn&check_region=";
-
+      "https://www.capcut.com/passport/web/email/send_code/?aid=348188&account_sdk_source=web&language=id-ID&verifyFp=verify_m63ct5o9_iA1paegq_5fJV_4xc1_9OWa_5FBqFem2oe3u&check_region=1";
     const response = await httpRequest(url, {
       body: buildUrlParams(params),
       headers: { cookie: this.cookies },
@@ -575,7 +570,7 @@ class CapCutTrialManager {
     return response;
   }
 
-  async completeRegistration(verifyResponse, otp) {
+  async completeRegistration(otp) {
     const params = {
       mix_mode: "1",
       email: Buffer.from(xorOperation(this.email), "utf-8").toString("hex"),
@@ -584,24 +579,20 @@ class CapCutTrialManager {
         "hex"
       ),
       type: "34",
-      email_ticket: verifyResponse.data.data.email_ticket,
-      birthday: "343c3c3c283536283531",
-      force_user_region: "ES",
-      biz_param: "{}",
+      birthday: "2004-02-06",
+      force_user_region: "ID",
+      biz_param: '{"invite_code":"HnxC0b95636945"}',
       check_region: "1",
       fixed_mix_mode: "1",
     };
 
     const url =
-      CONFIG.ENDPOINTS.BASE_URL +
-      CONFIG.ENDPOINTS.VERIFY_LOGIN +
-      "?aid=573081&account_sdk_source=web&passport_jssdk_version=1.0.7-beta.2&language=en&verifyFp=verify_m9vlaygx_BMtaVjBT_Ea3T_40gt_9aP1_xNdYVFHgpZrn&check_region=1";
+      "https://www.capcut.com/passport/web/email/register_verify_login/?aid=348188&account_sdk_source=web&language=id-ID&verifyFp=verify_m63ct5o9_iA1paegq_5fJV_4xc1_9OWa_5FBqFem2oe3u&check_region=1";
 
     const response = await httpRequest(url, {
       body: buildUrlParams(params),
       headers: { cookie: this.cookies },
     });
-
     this.cookies = response.cookie || this.cookies;
 
     if (response.status !== 200) {
@@ -633,8 +624,8 @@ class CapCutTrialManager {
       await this.sendVerificationCode();
       await this.getOtp();
 
-      const verifyResponse = await this.verifyCode(this.otp);
-      await this.completeRegistration(verifyResponse, this.otp);
+      //   const verifyResponse = await this.verifyCode(this.otp);
+      await this.completeRegistration(this.otp);
       const trialResponse = await this.applyTrial();
 
       // Save successful account
