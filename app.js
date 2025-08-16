@@ -2,8 +2,15 @@ import { fetch as undiciFetch, ProxyAgent, setGlobalDispatcher } from "undici";
 import inquirer from "inquirer";
 import fs from "fs/promises";
 import dotenv from "dotenv";
+import { faker } from "@faker-js/faker";
 const proxy = process.env.PROXY_URL;
-
+function randomName(len) {
+  const chars = "abcdefghijklmnopqrstuvwxyz0987654321";
+  return Array.from(
+    { length: len },
+    () => chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
+}
 // kalau ada proxy, set dispatcher
 if (proxy && proxy.trim() !== "") {
   setGlobalDispatcher(new ProxyAgent(proxy));
@@ -447,10 +454,21 @@ class CapCutTrialManager {
 
   async getEmail() {
     log("Getting temporary email...", "loading");
+    const domain = await httpRequestEmail(
+      "https://api.internal.temp-mail.io/api/v4/domains",
+      {
+        body: null,
+      }
+    );
+    const names = domain.data.domains.map((d) => d.name);
+    const randomDomain = names[Math.floor(Math.random() * names.length)];
+    const name =
+      faker.internet.displayName().toLocaleLowerCase() +
+      randomName(Math.floor(Math.random() * 2) + 8);
 
     const payload = {
-      min_name_length: 10,
-      max_name_length: 20,
+      name: name.replace(/[^a-zA-Z0-9]/g, ""),
+      domain: randomDomain,
     };
 
     const response = await httpRequestEmail(
@@ -461,9 +479,31 @@ class CapCutTrialManager {
     );
 
     if (response.success && response.status === 200) {
-      this.email = response.data.email;
-      this.password = process.env.DEFAULT_PASSWORD || "Kaserinas123@";
-      log(`Email obtained: ${this.email}`, "success");
+      const params = {
+        mix_mode: "1",
+        email: Buffer.from(xorOperation(response.data.email), "utf-8").toString(
+          "hex"
+        ),
+        password: Buffer.from(
+          xorOperation(process.env.DEFAULT_PASSWORD),
+          "utf-8"
+        ).toString("hex"),
+        type: "34",
+        fixed_mix_mode: "1",
+      };
+      const responsecheck = await httpRequest(
+        "https://www.capcut.com/passport/web/user/check_email_registered?aid=348188&account_sdk_source=web&sdk_version=2.1.10-tiktok&language=en&verifyFp=verify_meennl7z_ntAqVzl9_c9bp_4ty6_9pw1_7NvATgxAhaMl",
+        {
+          body: buildUrlParams(params),
+        }
+      );
+      if (responsecheck.data.data.is_registered === 0) {
+        this.email = response.data.email;
+        this.password = process.env.DEFAULT_PASSWORD || "Kaserinas123@";
+        log(`Email obtained: ${this.email}`, "success");
+      } else {
+        throw new Error("Failed to get temporary email");
+      }
     } else {
       throw new Error("Failed to get temporary email");
     }
@@ -581,7 +621,7 @@ class CapCutTrialManager {
         "hex"
       ),
       type: "34",
-      birthday: "2004-02-06",
+      birthday: "1998-02-06",
       force_user_region: "ID",
       biz_param: '{"invite_code":"HnxC0b95636945"}',
       check_region: "1",
@@ -600,7 +640,7 @@ class CapCutTrialManager {
     if (response.status !== 200) {
       throw new Error("Registration completion failed");
     }
-
+    console.log(response);
     return response;
   }
 
